@@ -9,19 +9,16 @@
     <div v-else>
       <p class="text-muted">Статус скана: {{ status }}</p>
       <div v-if="hosts.length === 0">
-        <!-- Если статус running и данных нет -->
         <div v-if="status === 'running'" class="text-center">
           <div class="spinner-border text-primary" role="status">
             <span class="visually-hidden">Загрузка...</span>
           </div>
           <p class="mt-2">Сканирование в процессе...</p>
         </div>
-        <!-- Если статус finished и данных нет -->
         <div v-else-if="status === 'finished'" class="alert alert-warning">
           Данные для данного скана отсутствуют.
         </div>
       </div>
-      <!-- Отображение списка хостов, если данные есть -->
       <ul class="list-group" v-else>
         <li
             v-for="host in hosts"
@@ -53,7 +50,6 @@
             <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
           </div>
           <div class="modal-body">
-            <!-- Условная логика отображения сервисов -->
             <div v-if="servicesLoading" class="text-center">
               <div class="spinner-border text-primary" role="status">
                 <span class="visually-hidden">Загрузка...</span>
@@ -61,15 +57,7 @@
               <p class="mt-2">Загрузка данных...</p>
             </div>
             <div v-else-if="!selectedHost?.services || selectedHost.services.length === 0">
-              <div v-if="status === 'running'" class="text-center">
-                <div class="spinner-border text-primary" role="status">
-                  <span class="visually-hidden">Загрузка...</span>
-                </div>
-                <p class="mt-2">Сканирование в процессе...</p>
-              </div>
-              <div v-else-if="status === 'finished'" class="alert alert-warning">
-                Для данного хоста нет доступных сервисов.
-              </div>
+              <p class="text-muted">Для данного хоста нет доступных сервисов.</p>
             </div>
             <ul class="list-group" v-else>
               <li
@@ -84,6 +72,29 @@
                   Версия: {{ service.version || 'Не определена' }}
                 </div>
                 <div v-if="service.ostype">OS: {{ service.ostype }}</div>
+
+                <!-- CVE информация -->
+                <div v-if="service.cves && service.cves.length > 0" class="mt-3">
+                  <h6 class="text-danger">Обнаруженные CVE:</h6>
+                  <ul class="list-group">
+                    <li
+                        v-for="cve in service.cves"
+                        :key="cve.cve_id"
+                        class="list-group-item"
+                    >
+                      <strong>{{ cve.cve_id }}</strong>
+                      <p>{{ cve.description }}</p>
+                      <ul>
+                        <li v-for="reference in cve.references" :key="reference">
+                          <a :href="reference" target="_blank">{{ reference }}</a>
+                        </li>
+                      </ul>
+                    </li>
+                  </ul>
+                </div>
+                <div v-else class="mt-3">
+                  <p class="text-muted">Нет обнаруженных CVE.</p>
+                </div>
               </li>
             </ul>
           </div>
@@ -92,6 +103,7 @@
     </div>
   </div>
 </template>
+
 
 <script>
 import axiosInstance from '@/axiosInstance';
